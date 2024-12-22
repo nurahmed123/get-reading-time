@@ -14,6 +14,9 @@
     "type": "git",
     "url": "git+https://github.com/nurahmed123/get-reading-time.git"
   },
+  "publishConfig": {
+    "registry": "https://www.npmjs.com/package/get-reading-time"
+  },
   "keywords": [
     "Reading",
     "Time",
