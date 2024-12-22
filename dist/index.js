@@ -44,7 +44,7 @@ function analyzeText(text, wordsPerMinute = DEFAULT_READING_SPEED) {
   const characterCount = calculateCharacterCount(cleanText);
   const sentenceCount = calculateSentenceCount(cleanText);
   const { minutes, seconds } = calculateReadingTime(wordCount, wordsPerMinute);
-  const linkCount = countLinks(cleanText);
+  const links = countLinks(cleanText);
   const readabilityScore = calculateReadabilityScore(cleanText);
   const sentiment = analyzeSentiment(cleanText);
   const keywords = extractKeywords(cleanText);
@@ -53,7 +53,10 @@ function analyzeText(text, wordsPerMinute = DEFAULT_READING_SPEED) {
     wordCount,
     characterCount,
     sentenceCount,
-    linkCount,
+    linkCount: links.length,
+    // Link count remains for backward compatibility
+    links,
+    // Add all links in the result
     readabilityScore,
     sentiment,
     keywords
@@ -81,7 +84,7 @@ function calculateReadingTime(wordCount, wordsPerMinute) {
 function countLinks(text) {
   const linkRegex = /https?:\/\/[^\s]+/g;
   const matches = text.match(linkRegex);
-  return matches ? matches.length : 0;
+  return matches || [];
 }
 function calculateReadabilityScore(text) {
   const wordCount = calculateWordCount(text);

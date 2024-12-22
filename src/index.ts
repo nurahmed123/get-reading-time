@@ -10,10 +10,13 @@ interface TextAnalysisResult {
     characterCount: number;
     sentenceCount: number;
     linkCount: number;
+    links: string[]; // New field to store the links
     readabilityScore: number;
     sentiment: string;
     keywords: string[];
 }
+
+
 
 // Main Analysis Function
 export function analyzeText(
@@ -32,7 +35,7 @@ export function analyzeText(
     const characterCount = calculateCharacterCount(cleanText);
     const sentenceCount = calculateSentenceCount(cleanText);
     const { minutes, seconds } = calculateReadingTime(wordCount, wordsPerMinute);
-    const linkCount = countLinks(cleanText);
+    const links = countLinks(cleanText); // Get all links
     const readabilityScore = calculateReadabilityScore(cleanText);
     const sentiment = analyzeSentiment(cleanText);
     const keywords = extractKeywords(cleanText);
@@ -42,12 +45,14 @@ export function analyzeText(
         wordCount,
         characterCount,
         sentenceCount,
-        linkCount,
+        linkCount: links.length, // Link count remains for backward compatibility
+        links, // Add all links in the result
         readabilityScore,
         sentiment,
         keywords
     };
 }
+
 
 // Clean the input text by removing extra spaces and special characters
 function cleanTextInput(text: string): string {
@@ -80,11 +85,11 @@ function calculateReadingTime(wordCount: number, wordsPerMinute: number): { minu
     return { minutes: parseFloat(minutes), seconds: parseFloat(seconds) };
 }
 
-// Count the number of links (URLs) in the text
-function countLinks(text: string): number {
+// Count the number of links (URLs) in the text and return the links
+function countLinks(text: string): string[] {
     const linkRegex = /https?:\/\/[^\s]+/g;
     const matches = text.match(linkRegex);
-    return matches ? matches.length : 0;
+    return matches || []; // Return the list of links (empty array if none found)
 }
 
 // Calculate readability score using Flesch Reading Ease formula
