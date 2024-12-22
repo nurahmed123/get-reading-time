@@ -1,6 +1,6 @@
 {
   "name": "get-reading-time",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "main": "/dist/index.js",
   "module": "/dist/index.mjs",
   "types": "/dist/index.d.ts",
@@ -12,7 +12,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nurahmed123/get-reading-time.git"
+    "url": "git+https://github.com/nurahmed123/get-reading-time.git",
+    "license": "https://github.com/nurahmed123/get-reading-time/blob/main/LICENSE"
   },
   "publishConfig": {
     "registry": "https://www.npmjs.com/package/get-reading-time"
