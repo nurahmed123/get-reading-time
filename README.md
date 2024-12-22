@@ -26,20 +26,20 @@ A simple text analysis tool that provides insights into text such as reading tim
 
 To install the package from npm, run:
 ``` bash
-npm install text-analysis-tool 
+npm i get-reading-time
 ```
 
 
 Or using yarn:
 ```bash
-yarn  add get-reading-time
+yarn add get-reading-time
 ```
 
 ## Usage
 
 Here’s how you can use the analyzeText function to analyze a piece of text:
 ```bash
-import  { analyzeText }  from  'get-reading-time';
+import { analyzeText } from "get-reading-time/dist/index.js";
 ```
 // Example input text
 ```javascript
@@ -47,11 +47,26 @@ const text =  "This is an example of text. It contains words, sentences, and lin
 
 const result =  analyzeText(text);
 
-console.log(result);
+// Analyze the text
+try {
+    const result = analyzeText(text);
+
+    // Output the analysis results
+    console.log("Text Analysis Result:");
+    console.log(JSON.stringify(result, null, 2));
+} catch (error) {
+    // Narrow the type of error to Error
+    if (error instanceof Error) {
+        console.error("Error analyzing text:", error.message);
+    } else {
+        console.error("Unknown error:", error);
+    }
+}
+
 ```
 ### Example Output
 ```json
-json{
+{
  "readingTime":  {
  "minutes":  0.05,
  "seconds":  5.23

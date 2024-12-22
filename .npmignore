@@ -1,0 +1,9 @@
+/src
+/node_modules
+/testy/
+
+.DS_Store
+.env
+
+tsconfig.json
+tsup.config.ts

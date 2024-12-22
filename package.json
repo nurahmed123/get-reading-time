@@ -1,10 +1,14 @@
 {
   "name": "get-reading-time",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "1.0.3",
+  "main": "/dist/index.js",
+  "module": "/dist/index.mjs",
+  "types": "/dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/test.js"
+    "build": "tsup",
+    "start": "node dist/test.js",
+    "lint": "tsc",
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -137,6 +141,7 @@
     "typescript": "^5.7.2"
   },
   "dependencies": {
-    "sentiment": "^5.0.2"
+    "sentiment": "^5.0.2",
+    "tsup": "^8.3.5"
   }
 }
