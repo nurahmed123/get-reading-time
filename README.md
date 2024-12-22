@@ -121,6 +121,7 @@ Feel free to fork the repository, make your changes, and submit a pull request. 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](https://github.com/nurahmed123/get-reading-time/blob/main/LICENSE) file for details.
+[![npm version](https://badge.fury.io/js/get-reading-time.svg)](https://www.npmjs.com/get-reading-time)
 
 ## Contact
 
