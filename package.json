@@ -1,6 +1,6 @@
 {
   "name": "get-reading-time",
-  "version": "1.0.6",
+  "version": "1.2.0",
   "main": "/dist/index.js",
   "module": "/dist/index.mjs",
   "types": "/dist/index.d.ts",
@@ -140,11 +140,15 @@
   "homepage": "https://github.com/nurahmed123/get-reading-time#readme",
   "description": "",
   "devDependencies": {
+    "@types/axios": "^0.9.36",
     "@types/node": "^22.10.2",
     "@types/sentiment": "^5.0.4",
     "typescript": "^5.7.2"
   },
   "dependencies": {
+    "axios": "^1.7.9",
+    "cohere-ai": "^7.15.0",
+    "compromise": "^14.14.3",
     "sentiment": "^5.0.2",
     "tsup": "^8.3.5"
   }

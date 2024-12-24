@@ -26,13 +26,37 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var __async = (__this, __arguments, generator) => {
+  return new Promise((resolve, reject) => {
+    var fulfilled = (value) => {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    };
+    var rejected = (value) => {
+      try {
+        step(generator.throw(value));
+      } catch (e) {
+        reject(e);
+      }
+    };
+    var step = (x) => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
+    step((generator = generator.apply(__this, __arguments)).next());
+  });
+};
 
 // src/index.ts
 var index_exports = {};
 __export(index_exports, {
-  analyzeText: () => analyzeText
+  aiTexGen: () => AiTexGen,
+  analyzeText: () => analyzeText,
+  getPunch: () => getPunch
 });
 module.exports = __toCommonJS(index_exports);
+
+// src/utils/analyzeText.ts
 var import_sentiment = __toESM(require("sentiment"));
 var DEFAULT_READING_SPEED = 200;
 function analyzeText(text, wordsPerMinute = DEFAULT_READING_SPEED) {
@@ -160,7 +184,117 @@ function extractNGrams(words) {
 function isStopWord(word, stopWords) {
   return stopWords.has(word);
 }
+
+// src/utils/getPunch.ts
+var import_compromise = __toESM(require("compromise"));
+var getPunch = (article) => {
+  if (typeof article !== "string" || article.trim().length === 0) {
+    throw new TypeError("Invalid input: article must be a non-empty string.");
+  }
+  try {
+    const doc = (0, import_compromise.default)(article);
+    const formatted = doc.sentences().normalize().out("text");
+    return {
+      original: article.trim(),
+      formatted
+    };
+  } catch (error) {
+    throw new Error(`Error processing the article: ${error instanceof Error ? error.message : "Unknown error"}`);
+  }
+};
+
+// src/utils/aiTexGen.ts
+var import_cohere_ai = require("cohere-ai");
+var AiTexGen = class {
+  constructor(apiKey) {
+    if (!apiKey || typeof apiKey !== "string") {
+      throw this.createErrorResponse("API_KEY_MISSING", "A valid API key must be provided.", 400);
+    }
+    this.cohereClient = new import_cohere_ai.CohereClientV2({ token: apiKey });
+  }
+  // Validate user input (topic and word count)
+  validateInputs(topic, wordCount) {
+    if (typeof topic !== "string" || topic.trim().length === 0) {
+      throw this.createErrorResponse("INVALID_TOPIC", "Topic must be a non-empty string.", 400);
+    }
+    if (typeof wordCount !== "number" || wordCount <= 0) {
+      console.warn("Invalid word count provided. Defaulting to 100 words.");
+      wordCount = 100;
+    }
+  }
+  // Generate content using Cohere's API
+  generateContent(topic, wordCount = 100) {
+    return __async(this, null, function* () {
+      var _a;
+      try {
+        this.validateInputs(topic, wordCount);
+        const prompt = `Write a detailed article about ${topic}, aiming for maximum ${wordCount} words.`;
+        const response = yield this.cohereClient.chat({
+          model: "command-r-plus",
+          // Specify the model you want to use
+          messages: [
+            {
+              role: "user",
+              content: prompt
+              // Use the prompt with the topic and word count
+            }
+          ]
+        });
+        const content = this.processContent((_a = response.message) == null ? void 0 : _a.content);
+        return {
+          topic,
+          content
+        };
+      } catch (error) {
+        console.error("Error generating content from Cohere API:", error);
+        throw this.createErrorResponse("API_ERROR", "Failed to generate content from Cohere API.", 500, this.formatErrorDetails(error));
+      }
+    });
+  }
+  // Helper method to process the content and format it properly
+  processContent(content) {
+    if (!content || content.length === 0) {
+      return "No content generated or content is empty.";
+    }
+    return content.map((item) => {
+      if (typeof item === "string") {
+        return item.trim();
+      } else if (typeof item === "object") {
+        return this.extractTextFromObject(item);
+      }
+      return "";
+    }).join(" ").trim();
+  }
+  // Helper method to safely extract text from an object, if needed
+  extractTextFromObject(obj) {
+    if (obj && obj.text) {
+      return obj.text.trim();
+    }
+    return "";
+  }
+  // Helper method to create an error response with a status code
+  createErrorResponse(code, message, statusCode, details) {
+    return {
+      error: {
+        code,
+        message,
+        statusCode,
+        details: details || ""
+      }
+    };
+  }
+  // Helper method to format error details (narrowing down the 'unknown' type)
+  formatErrorDetails(error) {
+    if (error instanceof Error) {
+      return error.message;
+    } else {
+      return "An unknown error occurred.";
+    }
+  }
+};
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
-  analyzeText
+  aiTexGen,
+  analyzeText,
+  getPunch
 });
