@@ -186,22 +186,29 @@ function isStopWord(word, stopWords) {
 }
 
 // src/utils/getPunch.ts
-var import_compromise = __toESM(require("compromise"));
-var getPunch = (article) => {
-  if (typeof article !== "string" || article.trim().length === 0) {
-    throw new TypeError("Invalid input: article must be a non-empty string.");
-  }
-  try {
-    const doc = (0, import_compromise.default)(article);
-    const formatted = doc.sentences().normalize().out("text");
-    return {
-      original: article.trim(),
-      formatted
-    };
-  } catch (error) {
-    throw new Error(`Error processing the article: ${error instanceof Error ? error.message : "Unknown error"}`);
-  }
-};
+var import_axios = __toESM(require("axios"));
+var API_URL = "https://e4fc-35-185-85-107.ngrok-free.app/get-reading-time";
+var SECRET_CODE = "amrseccode";
+function getPunch(next) {
+  return __async(this, null, function* () {
+    var _a;
+    try {
+      const response = yield import_axios.default.post(API_URL, {
+        secret_code: SECRET_CODE,
+        content: next
+      });
+      return {
+        content: response.data.formatted_text || "No content returned",
+        status_code: 200
+      };
+    } catch (error) {
+      return {
+        error: ((_a = error.response) == null ? void 0 : _a.data) || "Failed to get response from the server.",
+        status_code: 500
+      };
+    }
+  });
+}
 
 // src/utils/aiTexGen.ts
 var import_cohere_ai = require("cohere-ai");

@@ -1,3 +1,4 @@
+
 # Text Analysis Tool
 
 A simple text analysis tool that provides insights into text such as reading time, word count, sentiment, readability score, link count, and SEO-friendly keywords.
@@ -13,6 +14,7 @@ A simple text analysis tool that provides insights into text such as reading tim
 - **Sentiment Analysis**: Analyzes the sentiment of the text (Positive, Negative, or Neutral).
 - **SEO-friendly Keywords**: Extracts the top 5 SEO-friendly keywords or key phrases (bi-grams and tri-grams) from the text.
 - **aiTexGen**: Allows users to generate content based on a search prompt using the Cohere AI API, with a specified word count.
+- **Automatic Punctuation and Capitalization**: Automatically adds proper punctuation and capitalizes the beginning of sentences in a provided text.
 
 ## Installation
 
@@ -126,6 +128,46 @@ testGenerateContent();
 }
 ```
 
+### Automatic Punctuation and Capitalization
+
+You can now pass an article to the `analyzeText` function, and it will automatically fix punctuation and capitalize the first letter of sentences. This feature helps to improve the readability of raw text.
+
+#### Example Code
+Import the package and follow the steps: 
+```javascript
+import { getPunch } from 'get-reading-time/dist/index.js';
+```
+
+```javascript
+// Example to test with a string
+const content = "once a lion a fox and a wolf went hunting they ultimately spotted a stag and killed him for their food while sharing the hunt quarter me this stag roared the lion and other animals skinned and cut the spoil into four equal parts";
+async function GetPunch() {
+    try {
+        // Call the getPunch function with content
+        const result = await getPunch(content);
+
+        // Check the result and log it as a formatted JSON response
+        if (result.status_code === 200) {
+            console.log(JSON.stringify(result, null, 2));
+        } else {
+            console.error("Error:", JSON.stringify(result, null, 2));
+        }
+    } catch (error) {
+        // Handle unexpected errors
+        console.error("Unexpected Error:", error);
+    }
+}
+// Run the test
+GetPunch();
+```
+
+### Example Output
+```json
+{
+  "content": "Once a Lion, a Fox and a Wolf went hunting, they ultimately found a stag and killed him for their food while sharing the hunt quarter me. This stag roared the Lion and other animals skinned and cut the spoil into four equal parts.",
+  "status_code": 200
+}
+```
 ## Parameters
 
 - text: The text to be analyzed (required).
@@ -162,6 +204,7 @@ Generates content based on the given topic and word count using the Cohere AI AP
 - **extractNGrams(words: string[])**: Extracts bi-grams and tri-grams from the list of words.
 - **isStopWord(word: string, stopWords: Set<string>)**: Checks if a word is a stop word to exclude from keyword extraction.
 - **generateContent(words: string[])**: Genarate text based on the query and word limit.
+- **autoPunctuateAndCapitalize(text: string)**: Adds punctuation and capitalization to the content.
 
 ## Contributing
 
