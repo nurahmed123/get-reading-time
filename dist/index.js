@@ -187,7 +187,7 @@ function isStopWord(word, stopWords) {
 
 // src/utils/getPunch.ts
 var import_axios = __toESM(require("axios"));
-var API_URL = "https://e4fc-35-185-85-107.ngrok-free.app/get-reading-time";
+var API_URL = "https://60b3-2400-6180-0-d0-00-ef-f001.ngrok-free.app/get-reading-time";
 var SECRET_CODE = "amrseccode";
 function getPunch(next) {
   return __async(this, null, function* () {
