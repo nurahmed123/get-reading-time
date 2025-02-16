@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Constants
-const API_URL = "https://418f-35-160-232-33.ngrok-free.app/get-reading-time";
+const API_URL = "http://45.55.86.181:404/get-reading-time";
 const SECRET_CODE = "amrseccode";
 
 // Define the type for the API response
