@@ -1,6 +1,4 @@
-
-Here’s the updated README with the added **Markdown Table Converter** and **langTrans (Language Translation)** features:
-
+# Get Reading Time: Ultimate Text Analysis, AI Content Generation & Markdown Conversion Tool
 
 # Text Analysis Tool
 
