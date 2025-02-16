@@ -48,7 +48,7 @@ import { analyzeText } from "get-reading-time/dist/index.js";
 
 ```
 
-### Example Code
+#### Example Code
 
 ```javascript
 const text = `This is an example of text. It contains words, sentences, and links like there are https://linkedin.com/in/06nurahmed https://github.com/nurahmed123`;
@@ -73,7 +73,7 @@ try {
 
 ```
 
-### Example Output
+#### Example Output
 
 ```json
 {
@@ -100,7 +100,7 @@ try {
 
 This feature allows you to convert plain text content into a well-formatted markdown table.
 
-### Example Code
+#### Example Code
 
 ```javascript
 import { tableMaker } from "get-reading-time/dist/index.js";
@@ -122,7 +122,7 @@ TableConversion();
 
 ```
 
-### Example Output
+#### Example Output
 
 ```markdown
 | Name                | Position                                      | Email               |
@@ -136,7 +136,7 @@ TableConversion();
 
 This feature allows you to translate any text into different languages. Simply provide the target language, and the tool will return the translated content.
 
-### Example Code
+#### Example Code
 
 ```javascript
 import { langTrans } from 'get-reading-time/dist/index.js';
@@ -158,7 +158,7 @@ translateText();
 
 ```
 
-### Example Output
+#### Example Output
 
 ```json
 {
@@ -172,8 +172,6 @@ translateText();
 
 This new feature allows users to generate content using Cohere AI. You provide your Cohere API key, a search prompt, and a word count, and it will return the generated content.
 
-### Usage
-
 To use the **aiTexGen** feature, follow these steps:
 
 ```bash
@@ -181,7 +179,7 @@ import { aiTexGen } from "get-reading-time/dist/index.js";
 
 ```
 
-### Example Code
+#### Example Code
 
 ```javascript
 import { aiTexGen } from '../dist/index.js';
@@ -212,7 +210,7 @@ GenerateContent();
 
 ```
 
-### Example Output
+#### Example Output
 
 ```json
 {
@@ -226,7 +224,7 @@ GenerateContent();
 
 You can now pass an article to the `analyzeText` function, and it will automatically fix punctuation and capitalize the first letter of sentences. This feature helps to improve the readability of raw text.
 
-#### Example Code
+##### Example Code
 
 Import the package and follow the steps:
 
@@ -262,7 +260,7 @@ GetPunch();
 
 ```
 
-### Example Output
+#### Example Output
 
 ```json
 {
