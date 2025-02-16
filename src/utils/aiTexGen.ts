@@ -1,107 +1,99 @@
-import { CohereClientV2 } from 'cohere-ai';
+import axios from 'axios';
 
-interface GenerateResponse {
-    message: {
-        content: (string | Record<string, any>)[];  // `content` can be an array of strings or objects
-    };
+// Define the interface for the API response format
+interface ApiResponse {
+    choices?: { message?: { content?: string } }[];
 }
 
+// Define the format for the generated content response
+interface GenerateResponse {
+    topic: string;
+    content: string;
+}
+
+// Define the format for the error response
 interface ErrorResponse {
     error: {
         code: string;
         message: string;
-        statusCode: number;  // Adding statusCode to represent the HTTP error code
+        statusCode: number;
         details?: string;
     };
 }
 
-export default class AiTexGen {
-    private cohereClient: CohereClientV2;
+export default class aiTexGen {
+    private apiUrl: string;
 
-    constructor(apiKey: string) {
-        // Initialize the Cohere client using the provided API key
-        if (!apiKey || typeof apiKey !== 'string') {
-            throw this.createErrorResponse('API_KEY_MISSING', 'A valid API key must be provided.', 400);
-        }
-        this.cohereClient = new CohereClientV2({ token: apiKey });
+    // Constructor initializes the API URL
+    constructor() {
+        this.apiUrl = 'https://ai.hackclub.com/chat/completions';
     }
 
-    // Validate user input (topic and word count)
+    // Validate the inputs before making the API call
     private validateInputs(topic: string, wordCount: number): void {
         if (typeof topic !== 'string' || topic.trim().length === 0) {
             throw this.createErrorResponse('INVALID_TOPIC', 'Topic must be a non-empty string.', 400);
         }
 
-        // If wordCount is not provided or invalid, default to 100
+        // If the word count is invalid, default it to 100
         if (typeof wordCount !== 'number' || wordCount <= 0) {
             console.warn('Invalid word count provided. Defaulting to 100 words.');
             wordCount = 100;
         }
     }
 
-    // Generate content using Cohere's API
-    public async generateContent(topic: string, wordCount: number = 100): Promise<{ topic: string; content: string }> {
+    /**
+     * Generates content based on the topic and word count.
+     * 
+     * @param topic The topic for the article (e.g., "Artificial Intelligence").
+     * @param wordCount The maximum number of words for the article (default is 100).
+     * @param markdown If true, returns the content in Markdown format (default is false).
+     * @returns A promise that resolves with the topic and generated content.
+     */
+    public async generateContent(topic: string, wordCount: number = 100, markdown: boolean = false): Promise<GenerateResponse> {
         try {
             // Validate the inputs
             this.validateInputs(topic, wordCount);
 
-            // Prepare the prompt to request from Cohere API
-            const prompt = `Write a detailed article about ${topic}, aiming for maximum ${wordCount} words.`;
+            // Define the formatting instruction based on the markdown flag
+            const formatInstruction = markdown
+                ? "Use proper Markdown formatting."
+                : "Use plain text formatting.";
 
-            // Make the request to Cohere's chat API
-            const response = await this.cohereClient.chat({
-                model: 'command-r-plus',  // Specify the model you want to use
+            // Create the prompt to send to the API
+            const prompt = `Write a detailed article about ${topic}, aiming for a maximum of ${wordCount} words. ${formatInstruction}`;
+
+            // Send the request to the API
+            const response = await axios.post<ApiResponse>(this.apiUrl, {
                 messages: [
                     {
                         role: 'user',
-                        content: prompt,  // Use the prompt with the topic and word count
+                        content: prompt,
                     },
                 ],
             });
 
-            // Handle response.content properly and format it
-            const content = this.processContent(response.message?.content);
+            // Process and return the generated content
+            const content = this.processContent(response.data.choices?.[0]?.message?.content);
 
-            // Return the generated content
             return {
                 topic,
                 content,
             };
         } catch (error: unknown) {
-            console.error('Error generating content from Cohere API:', error);
-            throw this.createErrorResponse('API_ERROR', 'Failed to generate content from Cohere API.', 500, this.formatErrorDetails(error));
+            console.error('Error generating content:', error);
+
+            // Create and throw an error response in case of failure
+            throw this.createErrorResponse('API_ERROR', 'Failed to generate content.', 500, this.formatErrorDetails(error));
         }
     }
 
-    // Helper method to process the content and format it properly
-    private processContent(content: (string | Record<string, any>)[] | undefined): string {
-        if (!content || content.length === 0) {
-            return 'No content generated or content is empty.';
-        }
-
-        // Format and join content into a clean readable string
-        return content.map(item => {
-            if (typeof item === 'string') {
-                // Trim extra spaces and return the string as is
-                return item.trim();
-            } else if (typeof item === 'object') {
-                // If item is an object, extract the meaningful text content
-                return this.extractTextFromObject(item);
-            }
-            return '';
-        }).join(' ').trim();  // Join everything into a single string without \n or escaped characters
+    // Process and clean up the generated content (e.g., remove extra spaces)
+    private processContent(content: string | undefined): string {
+        return content?.trim() || 'No content generated or content is empty.';
     }
 
-    // Helper method to safely extract text from an object, if needed
-    private extractTextFromObject(obj: Record<string, any>): string {
-        // Extracts the text from the object and returns it as plain text
-        if (obj && obj.text) {
-            return obj.text.trim();  // Only return the "text" field if it exists
-        }
-        return '';
-    }
-
-    // Helper method to create an error response with a status code
+    // Create a structured error response
     private createErrorResponse(code: string, message: string, statusCode: number, details?: string): ErrorResponse {
         return {
             error: {
@@ -113,13 +105,11 @@ export default class AiTexGen {
         };
     }
 
-    // Helper method to format error details (narrowing down the 'unknown' type)
+    // Format error details based on the error object
     private formatErrorDetails(error: unknown): string {
         if (error instanceof Error) {
-            // If the error is an instance of Error, return the message
             return error.message;
         } else {
-            // If the error is not an instance of Error, return a generic message
             return 'An unknown error occurred.';
         }
     }

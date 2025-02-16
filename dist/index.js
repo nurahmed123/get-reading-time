@@ -50,9 +50,11 @@ var __async = (__this, __arguments, generator) => {
 // src/index.ts
 var index_exports = {};
 __export(index_exports, {
-  aiTexGen: () => AiTexGen,
+  aiTexGen: () => aiTexGen,
   analyzeText: () => analyzeText,
-  getPunch: () => getPunch
+  getPunch: () => getPunch,
+  langTrans: () => langTrans,
+  tableMaker: () => tableMaker
 });
 module.exports = __toCommonJS(index_exports);
 
@@ -78,9 +80,7 @@ function analyzeText(text, wordsPerMinute = DEFAULT_READING_SPEED) {
     characterCount,
     sentenceCount,
     linkCount: links.length,
-    // Link count remains for backward compatibility
     links,
-    // Add all links in the result
     readabilityScore,
     sentiment,
     keywords
@@ -101,9 +101,11 @@ function calculateSentenceCount(text) {
 function calculateReadingTime(wordCount, wordsPerMinute) {
   if (wordCount === 0) return { minutes: 0, seconds: 0 };
   const readingTimeInMinutes = wordCount / wordsPerMinute;
-  const minutes = readingTimeInMinutes.toFixed(2);
-  const seconds = ((readingTimeInMinutes - Math.floor(readingTimeInMinutes)) * 60).toFixed(2);
-  return { minutes: parseFloat(minutes), seconds: parseFloat(seconds) };
+  const minutes = parseFloat(readingTimeInMinutes.toFixed(2));
+  const seconds = parseFloat(
+    ((readingTimeInMinutes - Math.floor(readingTimeInMinutes)) * 60).toFixed(2)
+  );
+  return { minutes, seconds };
 }
 function countLinks(text) {
   const linkRegex = /https?:\/\/[^\s]+/g;
@@ -118,11 +120,11 @@ function calculateReadabilityScore(text) {
   return 206.835 - 1.015 * (wordCount / sentenceCount) - 84.6 * (syllableCount / wordCount);
 }
 function calculateSyllableCount(text) {
-  return (text.match(/[aeiouy]{1,2}/g) || []).length;
+  return (text.match(/[aeiouy]{1,2}/gi) || []).length;
 }
 function analyzeSentiment(text) {
-  const sentiment = new import_sentiment.default();
-  const result = sentiment.analyze(text);
+  const sentimentAnalyzer = new import_sentiment.default();
+  const result = sentimentAnalyzer.analyze(text);
   return result.score > 0 ? "Positive" : result.score < 0 ? "Negative" : "Neutral";
 }
 function extractKeywords(text) {
@@ -146,7 +148,6 @@ function extractKeywords(text) {
     "it",
     "is",
     "was",
-    "for",
     "as",
     "be",
     "are",
@@ -169,14 +170,14 @@ function extractKeywords(text) {
       wordFrequency.set(nGram, (wordFrequency.get(nGram) || 0) + 1);
     }
   });
-  return Array.from(wordFrequency).sort(([, countA], [, countB]) => countB - countA).slice(0, 5).map(([key]) => key);
+  return Array.from(wordFrequency).sort(([, countA], [, countB]) => countB - countA).slice(0, 5).map(([keyword]) => keyword);
 }
 function extractNGrams(words) {
   const nGrams = [];
   for (let i = 0; i < words.length - 1; i++) {
-    nGrams.push(words[i] + " " + words[i + 1]);
+    nGrams.push(`${words[i]} ${words[i + 1]}`);
     if (i < words.length - 2) {
-      nGrams.push(words[i] + " " + words[i + 1] + " " + words[i + 2]);
+      nGrams.push(`${words[i]} ${words[i + 1]} ${words[i + 2]}`);
     }
   }
   return nGrams;
@@ -187,39 +188,139 @@ function isStopWord(word, stopWords) {
 
 // src/utils/getPunch.ts
 var import_axios = __toESM(require("axios"));
-var API_URL = "http://45.55.86.181:404/get-reading-time";
-var SECRET_CODE = "amrseccode";
-function getPunch(next) {
+var API_URL = "https://ai.hackclub.com/chat/completions";
+function getPunch(text) {
   return __async(this, null, function* () {
-    var _a;
+    var _a, _b, _c, _d, _e, _f;
     try {
       const response = yield import_axios.default.post(API_URL, {
-        secret_code: SECRET_CODE,
-        content: next
+        messages: [
+          {
+            role: "user",
+            content: `Fix the capitalization and punctuation of this text as plain text: "${text}"`
+          }
+        ],
+        temperature: 0
+        // Keep corrections consistent
       });
-      return {
-        content: response.data.formatted_text || "No content returned",
-        status_code: 200
-      };
+      const correctedText = (_d = (_c = (_b = (_a = response.data.choices) == null ? void 0 : _a[0]) == null ? void 0 : _b.message) == null ? void 0 : _c.content) == null ? void 0 : _d.trim();
+      if (!correctedText) {
+        console.warn("API returned no content.");
+        return { content: "No content generated", status_code: 200 };
+      }
+      return { content: correctedText, status_code: 200 };
     } catch (error) {
+      console.error("Error :", error);
       return {
-        error: ((_a = error.response) == null ? void 0 : _a.data) || "Failed to get response from the server.",
+        error: ((_f = (_e = error.response) == null ? void 0 : _e.data) == null ? void 0 : _f.error) || "Failed to get response from the AI server.",
         status_code: 500
       };
     }
   });
 }
 
-// src/utils/aiTexGen.ts
-var import_cohere_ai = require("cohere-ai");
-var AiTexGen = class {
-  constructor(apiKey) {
-    if (!apiKey || typeof apiKey !== "string") {
-      throw this.createErrorResponse("API_KEY_MISSING", "A valid API key must be provided.", 400);
+// src/utils/langTrans.ts
+var import_axios2 = __toESM(require("axios"));
+var API_URL2 = "https://ai.hackclub.com/chat/completions";
+function langTrans(content, language) {
+  return __async(this, null, function* () {
+    var _a, _b, _c, _d, _e, _f;
+    try {
+      const response = yield import_axios2.default.post(API_URL2, {
+        messages: [
+          {
+            role: "user",
+            content: `Translate this content "${content}" into "${language}".`
+          }
+        ]
+      });
+      const translatedText = (_d = (_c = (_b = (_a = response.data.choices) == null ? void 0 : _a[0]) == null ? void 0 : _b.message) == null ? void 0 : _c.content) == null ? void 0 : _d.trim();
+      if (!translatedText) {
+        console.warn("API returned no content.");
+        return { content: "No content generated", status_code: 200 };
+      }
+      return { content: translatedText, status_code: 200 };
+    } catch (error) {
+      console.error("Error :", error);
+      return {
+        error: ((_f = (_e = error.response) == null ? void 0 : _e.data) == null ? void 0 : _f.error) || "Failed to get response from the AI server.",
+        status_code: 500
+      };
     }
-    this.cohereClient = new import_cohere_ai.CohereClientV2({ token: apiKey });
+  });
+}
+
+// src/utils/tableMaker.ts
+var import_axios3 = __toESM(require("axios"));
+var API_URL3 = "https://ai.hackclub.com/chat/completions";
+function tableMaker(content) {
+  return __async(this, null, function* () {
+    var _a, _b, _c, _d, _e, _f, _g;
+    if (!content.trim()) {
+      return { error: "Input data cannot be empty.", status_code: 400 };
+    }
+    try {
+      const response = yield import_axios3.default.post(API_URL3, {
+        messages: [
+          {
+            role: "user",
+            content: `Convert the following data into a **clean, well-aligned Markdown table**. 
+- Ensure all columns have consistent widths.
+- Do not wrap the output in markdown code blocks.
+- Replace empty fields with "N/A".
+- Do not escape "|" inside text.
+
+Data:
+
+"${content}"`
+          }
+        ],
+        temperature: 0.4,
+        // Lower temperature ensures more consistent formatting.
+        max_tokens: 500
+        // Limits the response size.
+      });
+      let formattedTable = ((_d = (_c = (_b = (_a = response.data.choices) == null ? void 0 : _a[0]) == null ? void 0 : _b.message) == null ? void 0 : _c.content) == null ? void 0 : _d.trim()) || "";
+      formattedTable = formattedTable.replace(/```markdown|```/g, "").trim();
+      formattedTable = formatMarkdownTable(formattedTable);
+      if (!formattedTable) {
+        console.warn("API returned no content.");
+        return { content: "No content generated.", status_code: 200 };
+      }
+      return { content: formattedTable, status_code: 200 };
+    } catch (error) {
+      console.error("Error:", error);
+      return {
+        error: ((_f = (_e = error.response) == null ? void 0 : _e.data) == null ? void 0 : _f.error) || "Failed to process request.",
+        status_code: ((_g = error.response) == null ? void 0 : _g.status) || 500
+      };
+    }
+  });
+}
+function formatMarkdownTable(table) {
+  const lines = table.split("\n").map((line) => line.trim()).filter(Boolean);
+  const columnWidths = [];
+  lines.forEach((line) => {
+    const columns = line.split("|").map((col) => col.trim());
+    columns.forEach((col, index) => {
+      columnWidths[index] = Math.max(columnWidths[index] || 0, col.length);
+    });
+  });
+  const formattedLines = lines.map((line) => {
+    const columns = line.split("|").map((col) => col.trim());
+    return columns.map((col, index) => col.padEnd(columnWidths[index], " ")).join(" | ");
+  });
+  return formattedLines.join("\n");
+}
+
+// src/utils/aiTexGen.ts
+var import_axios4 = __toESM(require("axios"));
+var aiTexGen = class {
+  // Constructor initializes the API URL
+  constructor() {
+    this.apiUrl = "https://ai.hackclub.com/chat/completions";
   }
-  // Validate user input (topic and word count)
+  // Validate the inputs before making the API call
   validateInputs(topic, wordCount) {
     if (typeof topic !== "string" || topic.trim().length === 0) {
       throw this.createErrorResponse("INVALID_TOPIC", "Topic must be a non-empty string.", 400);
@@ -229,57 +330,45 @@ var AiTexGen = class {
       wordCount = 100;
     }
   }
-  // Generate content using Cohere's API
-  generateContent(topic, wordCount = 100) {
+  /**
+   * Generates content based on the topic and word count.
+   * 
+   * @param topic The topic for the article (e.g., "Artificial Intelligence").
+   * @param wordCount The maximum number of words for the article (default is 100).
+   * @param markdown If true, returns the content in Markdown format (default is false).
+   * @returns A promise that resolves with the topic and generated content.
+   */
+  generateContent(topic, wordCount = 100, markdown = false) {
     return __async(this, null, function* () {
-      var _a;
+      var _a, _b, _c;
       try {
         this.validateInputs(topic, wordCount);
-        const prompt = `Write a detailed article about ${topic}, aiming for maximum ${wordCount} words.`;
-        const response = yield this.cohereClient.chat({
-          model: "command-r-plus",
-          // Specify the model you want to use
+        const formatInstruction = markdown ? "Use proper Markdown formatting." : "Use plain text formatting.";
+        const prompt = `Write a detailed article about ${topic}, aiming for a maximum of ${wordCount} words. ${formatInstruction}`;
+        const response = yield import_axios4.default.post(this.apiUrl, {
           messages: [
             {
               role: "user",
               content: prompt
-              // Use the prompt with the topic and word count
             }
           ]
         });
-        const content = this.processContent((_a = response.message) == null ? void 0 : _a.content);
+        const content = this.processContent((_c = (_b = (_a = response.data.choices) == null ? void 0 : _a[0]) == null ? void 0 : _b.message) == null ? void 0 : _c.content);
         return {
           topic,
           content
         };
       } catch (error) {
-        console.error("Error generating content from Cohere API:", error);
-        throw this.createErrorResponse("API_ERROR", "Failed to generate content from Cohere API.", 500, this.formatErrorDetails(error));
+        console.error("Error generating content:", error);
+        throw this.createErrorResponse("API_ERROR", "Failed to generate content.", 500, this.formatErrorDetails(error));
       }
     });
   }
-  // Helper method to process the content and format it properly
+  // Process and clean up the generated content (e.g., remove extra spaces)
   processContent(content) {
-    if (!content || content.length === 0) {
-      return "No content generated or content is empty.";
-    }
-    return content.map((item) => {
-      if (typeof item === "string") {
-        return item.trim();
-      } else if (typeof item === "object") {
-        return this.extractTextFromObject(item);
-      }
-      return "";
-    }).join(" ").trim();
+    return (content == null ? void 0 : content.trim()) || "No content generated or content is empty.";
   }
-  // Helper method to safely extract text from an object, if needed
-  extractTextFromObject(obj) {
-    if (obj && obj.text) {
-      return obj.text.trim();
-    }
-    return "";
-  }
-  // Helper method to create an error response with a status code
+  // Create a structured error response
   createErrorResponse(code, message, statusCode, details) {
     return {
       error: {
@@ -290,7 +379,7 @@ var AiTexGen = class {
       }
     };
   }
-  // Helper method to format error details (narrowing down the 'unknown' type)
+  // Format error details based on the error object
   formatErrorDetails(error) {
     if (error instanceof Error) {
       return error.message;
@@ -303,5 +392,7 @@ var AiTexGen = class {
 0 && (module.exports = {
   aiTexGen,
   analyzeText,
-  getPunch
+  getPunch,
+  langTrans,
+  tableMaker
 });
