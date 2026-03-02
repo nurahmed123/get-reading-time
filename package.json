@@ -16,7 +16,7 @@
     "license": "https://github.com/nurahmed123/get-reading-time/blob/main/LICENSE"
   },
   "publishConfig": {
-    "registry": "https://www.npmjs.com/package/get-reading-time"
+    "access": "public"
   },
   "keywords": [
     "get-reading-time",
