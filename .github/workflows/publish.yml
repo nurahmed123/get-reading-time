@@ -1,0 +1,58 @@
+name: Publish get-reading-time to npm
+
+on:
+  # Trigger automatically when pushing to main or master
+  push:
+    branches:
+      - main
+      - master
+  # Trigger when a GitHub Release is created
+  release:
+    types: [created]
+  # Allow manual trigger from the GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # the node version to use
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --force
+
+      - name: Build the package
+        run: npm run build
+
+      - name: Publish to NPM
+        run: |
+            npm publish --access public
+        env:
+          # This connects the step to the token we'll create in GitHub secrets
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Setup Node.js for GitHub Packages
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+
+      - name: Publish to GitHub Packages
+        run: |
+          # GitHub Packages requires the package name to be scoped to the repository owner
+          npm pkg set name="@nurahmed123/get-reading-time"
+          npm publish
+        env:
+          # The GITHUB_TOKEN is automatically provided by GitHub Actions!
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
