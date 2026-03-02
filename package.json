@@ -9,7 +9,7 @@
     "start": "node dist/test.js",
     "lint": "tsc",
     "prepare": "npm run build"
-  },
+  }, 
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nurahmed123/get-reading-time.git",
